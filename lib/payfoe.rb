@@ -1,5 +1,5 @@
 class PayFoe
   def self.pay
-    puts "Bad decision..."
+    "Bad decision..."
   end
 end
