@@ -21,4 +21,15 @@ class UserMapper
     return id
   end
 
+  def find(id)
+    db = SQLite3::Database.open @db_path
+    rs = db.get_first_row "SELECT * FROM users WHERE id = ?", id
+    db.close
+    if rs
+      user = User.new(rs[0], rs[1], rs[2], rs[3])
+    else
+      nil
+    end
+  end
+
 end
