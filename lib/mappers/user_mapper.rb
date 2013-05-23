@@ -32,4 +32,24 @@ class UserMapper
     end
   end
 
+  def update(user)
+    db = SQLite3::Database.open @db_path
+    stm = db.prepare "UPDATE users SET username = ?, email = ?, name = ? WHERE id = ?"
+    stm.bind_param 1, user.username
+    stm.bind_param 2, user.email
+    stm.bind_param 3, user.name
+    stm.bind_param 4, user.id
+    stm.execute
+    stm.close
+    db.close
+    return nil
+  end
+
+  def delete(id)
+    db = SQLite3::Database.open @db_path
+    db.execute "DELETE FROM users WHERE id = ?", id
+    db.close
+    return nil
+  end
+
 end

@@ -33,6 +33,7 @@ describe UserMapper do
   subject { UserMapper.new @db_path }
   
   let(:test_user) { User.new(nil, "username", "email", "name") }
+
   before :each do
     @inserted_id = subject.insert(test_user)
   end
@@ -46,22 +47,15 @@ describe UserMapper do
   describe '#insert' do
 
     it 'inserts the user into the db' do
-      rs = @db.execute "SELECT * FROM users"
-      inserted = false
-      expected_row = [ test_user.username, test_user.email, test_user.name ]
-      rs.each do | row |
-        inserted = row[1..-1] == expected_row
-        break if inserted
-      end
-      inserted.should be_true
+      row = @db.get_first_row "SELECT username, email, name FROM users WHERE id = ?", @inserted_id
+      row.sort.should eq [test_user.username, test_user.email, test_user.name].sort
     end
 
     it 'returns the created users id' do
       rs = @db.execute "SELECT * FROM users"
       expected_id = 0
-      expected_row = [ test_user.username, test_user.email, test_user.name ]
       rs.each do | row |
-        if row[1..-1] == expected_row
+        if row[1..-1] == [test_user.username, test_user.email, test_user.name]
           expected_id = row[0]
           break
         end
@@ -97,6 +91,49 @@ describe UserMapper do
       values = [user.id, user.username, user.email, user.name]
       expected_values = [@inserted_id, expected_user.username, expected_user.email, expected_user.name]
       values.should eq expected_values
+    end
+
+  end
+
+  describe '#update' do
+
+    let(:updated_user) { User.new @inserted_id, "username2", "email2", "name2" }
+
+    before(:each, before: true) do
+      subject.update updated_user
+    end
+
+    it 'updates the correct user', before: true do
+      row = @db.get_first_row "SELECT name FROM users WHERE id = ?", @inserted_id
+      row[0].should eq updated_user.name
+    end
+
+    it 'updates only the correct user' do
+      id = subject.insert User.new(nil, "/", "/", "/")
+      row = @db.get_first_row "SELECT name FROM users WHERE id = ?", id
+      row[0].should_not eq updated_user.name
+    end
+
+    it 'updates the user with the correct values', before: true do
+      row = @db.get_first_row "SELECT username, email, name FROM users WHERE id = ?", @inserted_id
+      row.sort.should eq [updated_user.username, updated_user.email, updated_user.name].sort
+    end
+
+  end
+
+  describe '#delete' do
+
+    it 'deletes the correct user' do
+      subject.delete @inserted_id
+      row = @db.execute "SELECT * FROM users WHERE id = ?", @inserted_id
+      row.should be_empty
+    end
+
+    it 'deletes only the correct user' do
+      subject.insert User.new(nil, "/", "/", "/")
+      subject.delete @inserted_id
+      rs = @db.execute "SELECT id FROM users"
+      rs.size.should eq 1
     end
 
   end
