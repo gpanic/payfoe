@@ -91,6 +91,12 @@ describe UserMapper do
       values.should eq expected_values
     end
 
+    it 'loads teh user only once' do
+      user1 = subject.find(@inserted_id)
+      user2 = subject.find(@inserted_id)
+      user1.should eq user2
+    end
+
   end
 
   describe '#update' do

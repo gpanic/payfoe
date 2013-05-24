@@ -1,65 +1,43 @@
-class UserMapper
+require_relative 'data_mapper'
 
-  def initialize(db_path = "db/payfoe.db")
-    @db_path = db_path
-  end
-  
-  def db_path=(db)
-    @db_path = db
+class UserMapper < DataMapper
+  COLUMNS = "id, username, email, name"
+
+  def insert_stm
+    "INSERT INTO users VALUES (NULL, ?, ?, ?)"
   end
 
-  def insert(user)
-    db = SQLite3::Database.open @db_path
-    stm = db.prepare "INSERT INTO users VALUES (NULL, ?, ?, ?)"
+  def find_stm
+    "SELECT #{COLUMNS} FROM users WHERE id = ?"
+  end
+
+  def find_all_stm
+    "SELECT #{COLUMNS} FROM users"
+  end
+
+  def update_stm
+    "UPDATE users SET username = ?, email = ?, name = ? WHERE id = ?"
+  end
+
+  def delete_stm
+    "DELETE FROM users WHERE id = ?"
+  end
+
+  def do_load(id, rs)
+    user = User.new(id, rs[1], rs[2], rs[3])
+  end
+
+  def do_insert(user, stm)
     stm.bind_param 1, user.username
     stm.bind_param 2, user.email
     stm.bind_param 3, user.name
-    stm.execute
-    stm.close
-    id = db.last_insert_row_id
-    db.close
-    return id
   end
 
-  def find(id)
-    db = SQLite3::Database.open @db_path
-    rs = db.get_first_row "SELECT * FROM users WHERE id = ?", id
-    db.close
-    if rs
-      user = User.new(rs[0], rs[1], rs[2], rs[3])
-    else
-      nil
-    end
-  end
-
-  def update(user)
-    db = SQLite3::Database.open @db_path
-    stm = db.prepare "UPDATE users SET username = ?, email = ?, name = ? WHERE id = ?"
+  def do_update(user, stm)
     stm.bind_param 1, user.username
     stm.bind_param 2, user.email
     stm.bind_param 3, user.name
     stm.bind_param 4, user.id
-    stm.execute
-    stm.close
-    db.close
-    return nil
-  end
-
-  def delete(id)
-    db = SQLite3::Database.open @db_path
-    db.execute "DELETE FROM users WHERE id = ?", id
-    db.close
-    return nil
-  end
-
-  def find_all
-    db = SQLite3::Database.open @db_path
-    rs = db.execute "SELECT * FROM users"
-    all = []
-    rs.each do |row|
-      all.push(User.new(row[0], row[1], row[2], row[3]))
-    end
-    return all
   end
 
 end

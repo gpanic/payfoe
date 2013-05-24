@@ -1,4 +1,4 @@
-require 'db_helper'
+require_relative 'db_helper'
 require_relative 'entities/user'
 require_relative 'mappers/user_mapper'
 
