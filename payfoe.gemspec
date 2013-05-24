@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'payfoe'
-  s.version     = '0.0.0'
+  s.version     = '0.0.1'
   s.date        = '2013-05-15'
   s.summary     = "Not PayPal."
   s.description = "Simple online money transfer app"
