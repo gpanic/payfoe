@@ -52,4 +52,14 @@ class UserMapper
     return nil
   end
 
+  def find_all
+    db = SQLite3::Database.open @db_path
+    rs = db.execute "SELECT * FROM users"
+    all = []
+    rs.each do |row|
+      all.push(User.new(row[0], row[1], row[2], row[3]))
+    end
+    return all
+  end
+
 end

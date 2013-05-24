@@ -39,9 +39,7 @@ describe UserMapper do
   end
 
   after :each do
-    stm = @db.prepare "DELETE FROM users"
-    stm.execute
-    stm.close
+    @db.execute "DELETE FROM users"
   end
 
   describe '#insert' do
@@ -134,6 +132,28 @@ describe UserMapper do
       subject.delete @inserted_id
       rs = @db.execute "SELECT id FROM users"
       rs.size.should eq 1
+    end
+
+  end
+
+  describe '#find_all' do
+
+    it 'returns an array of all the users' do
+      test_user.id = @inserted_id
+      test_user2 = User.new(nil, "/", "/", "/")
+      test_user2.id = subject.insert test_user2
+      expected_array = [
+        [test_user.id, test_user.username, test_user.email, test_user.name],
+        [test_user2.id, test_user2.username, test_user2.email, test_user2.name]
+      ]
+      result = subject.find_all
+      result_array = result.inject([]) { |final, user| final.push([user.id, user.username, user.email, user.name]) }
+      result_array.should eq expected_array
+    end
+
+    it 'returns an empty array if there are no users' do
+      @db.execute "DELETE FROM users"
+      subject.find_all.should eq []
     end
 
   end
