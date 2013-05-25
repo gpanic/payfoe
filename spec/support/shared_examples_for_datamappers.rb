@@ -8,14 +8,14 @@ shared_context "DataMapperContext" do
 
     # Create test db schema
     schema = File.open(@db_schema_path, "w")
-    schema.write "tables:\n" +
-                 "  - CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, email TEXT UNIQUE, name TEXT, balance INTEGER)\n"
+    schema.write test_schema
     schema.close
 
     @dbh.init_db
 
     # Open test db
     @db = SQLite3::Database.open @db_path
+    @db.execute enable_fk
   end
 
   after :all do
@@ -103,15 +103,10 @@ shared_examples DataMapper do
       mapper.update updated_entity
     end
 
-    it 'updates the correct entity', before: true do
-      row = @db.get_first_row mapper.find_stm, @inserted_id
-      row[1].should eq entity_to_a(updated_entity)[1]
-    end
-
     it 'updates only the correct entity' do
       id = mapper.insert test_entity2
       row = @db.get_first_row mapper.find_stm, id
-      row[1].should_not eq entity_to_a(updated_entity)[1]
+      row.should_not eq entity_to_a(updated_entity)
     end
 
     it 'updates the entity with the correct values', before: true do

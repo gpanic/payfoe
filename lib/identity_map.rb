@@ -1,13 +1,19 @@
 class IdentityMap
 
-  @@user_map = {}
+  @@users_map = {}
+  @@transactions_map = {}
 
-  def self.user_map
-    @@user_map
+  def self.users_map
+    @@users_map
+  end
+
+  def self.transactions_map
+    @@transactions_map
   end
 
   def self.clean
-    @@user_map = {}
+    @@users_map = {}
+    @@transactions_map = {}
   end
 
 end

@@ -6,6 +6,7 @@ class DataMapper
 
   def insert(entity)
     db = SQLite3::Database.open @db_path
+    db.execute enable_fk
     stm = db.prepare insert_stm
     do_insert entity, stm
     stm.execute
@@ -22,6 +23,7 @@ class DataMapper
       return result
     end
     db = SQLite3::Database.open @db_path
+    db.execute enable_fk
     rs = db.get_first_row find_stm, id
     db.close
     if rs
@@ -37,6 +39,7 @@ class DataMapper
 
   def update(entity)
     db = SQLite3::Database.open @db_path
+    db.execute enable_fk
     stm = db.prepare update_stm
     do_update(entity, stm)
     stm.execute
@@ -48,6 +51,7 @@ class DataMapper
 
   def delete(id)
     db = SQLite3::Database.open @db_path
+    db.execute enable_fk
     db.execute delete_stm, id
     db.close
     IdentityMap.clean
@@ -74,6 +78,7 @@ class DataMapper
 
   def find_many(stm, params = [])
     db = SQLite3::Database.open @db_path
+    db.execute enable_fk
     rs = db.execute stm, *params
     result = load_all rs
     db.close

@@ -24,11 +24,11 @@ class UserMapper < DataMapper
   end
 
   def map
-    IdentityMap.user_map
+    IdentityMap.users_map
   end
 
   def do_load(id, rs)
-    user = User.new(id, rs[1], rs[2], rs[3])
+    user = User.new(id, rs[1], rs[2], rs[3], rs[4])
   end
 
   def do_insert(user, stm)

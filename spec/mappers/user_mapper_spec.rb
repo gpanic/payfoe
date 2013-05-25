@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'sqlite3'
 
 describe UserMapper do
 

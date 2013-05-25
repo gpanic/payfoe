@@ -2,12 +2,15 @@ require_relative 'db_helper'
 require_relative 'entities/user'
 require_relative 'entities/transaction'
 require_relative 'mappers/user_mapper'
+require_relative 'mappers/transaction_mapper'
 require_relative 'identity_map'
+require_relative 'utility'
 
 class PayFoe
 
   def initialize
     @user_mapper = UserMapper.new
+    @transaction_mapper = TransactionMapper.new
   end
   
   def register(user)

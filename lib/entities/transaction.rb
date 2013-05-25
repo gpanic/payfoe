@@ -1,5 +1,3 @@
-require 'spec_helper'
-
 class Transaction
   
   attr_accessor :id
