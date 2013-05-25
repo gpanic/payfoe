@@ -95,6 +95,10 @@ shared_examples DataMapper do
       mapper.find(@inserted_id)
     end
 
+    it 'returns the user from the identity map' do
+      mapper.find(@inserted_id).should eq mapper.map[@inserted_id]
+    end
+
   end
 
   describe '#update' do

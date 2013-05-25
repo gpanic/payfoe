@@ -14,6 +14,16 @@ describe UserMapper do
   let(:test_entity2) { User.new(nil, "username2", "email2", "name2") }
   let(:updated_entity) { User.new @inserted_id, "username3", "email3", "name3", 200 }
 
+  def entity_to_a(entity)
+    array = []
+    vars = entity.instance_variables
+    vars.each do |var|
+      method = var.to_s[1..-1]
+      array.push(entity.send(method.to_sym))
+    end
+    return array
+  end
+
   describe '#insert' do
 
     it 'throws an exception when username is not unique' do
@@ -26,16 +36,6 @@ describe UserMapper do
       expect { mapper.insert(user) }.to raise_error(SQLite3::ConstraintException)
     end
 
-  end
-
-  def entity_to_a(entity)
-    array = []
-    vars = entity.instance_variables
-    vars.each do |var|
-      method = var.to_s[1..-1]
-      array.push(entity.send(method.to_sym))
-    end
-    return array
   end
 
 end

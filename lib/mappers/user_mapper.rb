@@ -28,7 +28,7 @@ class UserMapper < DataMapper
   end
 
   def do_load(id, rs)
-    user = User.new(id, rs[1], rs[2], rs[3], rs[4])
+    user = User.new id, rs[1], rs[2], rs[3], rs[4]
   end
 
   def do_insert(user, stm)
@@ -39,10 +39,7 @@ class UserMapper < DataMapper
   end
 
   def do_update(user, stm)
-    stm.bind_param 1, user.username
-    stm.bind_param 2, user.email
-    stm.bind_param 3, user.name
-    stm.bind_param 4, user.balance
+    do_insert user, stm
     stm.bind_param 5, user.id
   end
 
