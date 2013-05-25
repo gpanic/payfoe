@@ -10,6 +10,7 @@ describe TransactionMapper do
   end
 
   let(:mapper) { TransactionMapper.new @db_path }
+  let(:identity_map) { double("tansactions_map") }
   let(:test_entity) { Transaction.new nil, nil, nil, "type", 100 }
   let(:test_entity2) { Transaction.new nil, nil, nil, "type2", 100 }
   let(:updated_entity) { Transaction.new @inserted_id, nil, nil, "type3", 200 }

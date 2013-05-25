@@ -29,11 +29,16 @@ shared_context "DataMapperContext" do
 
   before :each do
     @inserted_id = mapper.insert(test_entity)
+
+    # Mock the Identity Map
+    mapper.instance_variable_set :@test_map, identity_map
+    mapper.define_singleton_method(:map) { @test_map }
+    identity_map.stub(:[])
+    identity_map.stub(:[]=)
   end
 
   after :each do
     @db.execute delete_all_stm
-    IdentityMap.clean
   end
 
 end
@@ -85,6 +90,7 @@ shared_examples DataMapper do
     end
 
     it 'loads the entity only once' do
+      mapper.map.stub(:[]).any_number_of_times.and_return(test_entity)
       entity = mapper.find(@inserted_id)
       entity2 = mapper.find(@inserted_id)
       entity.should eq entity2
@@ -96,6 +102,7 @@ shared_examples DataMapper do
     end
 
     it 'returns the user from the identity map' do
+      mapper.map.stub(:[]).and_return(test_entity)
       mapper.find(@inserted_id).should eq mapper.map[@inserted_id]
     end
 
@@ -118,8 +125,9 @@ shared_examples DataMapper do
       row.should eq entity_to_a(updated_entity)
     end
 
-    it 'cleans the identity map', before: true do
-      mapper.map.should be_empty
+    it 'cleans the identity map' do
+      IdentityMap.should_receive(:clean)
+      mapper.update updated_entity
     end
 
   end
@@ -140,8 +148,8 @@ shared_examples DataMapper do
     end
 
     it 'cleans the identity map' do
+      IdentityMap.should_receive(:clean)
       mapper.delete @inserted_id
-      mapper.map.should be_empty
     end
 
   end

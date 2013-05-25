@@ -10,6 +10,7 @@ describe UserMapper do
   end
 
   let(:mapper) { UserMapper.new @db_path }
+  let(:identity_map) { double("users_map") }
   let(:test_entity) { User.new(nil, "username", "email", "name") }
   let(:test_entity2) { User.new(nil, "username2", "email2", "name2") }
   let(:updated_entity) { User.new @inserted_id, "username3", "email3", "name3", 200 }
