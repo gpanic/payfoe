@@ -27,12 +27,13 @@ shared_context "DataMapperContext" do
     File.delete @db_schema_path
   end
 
-  after :each do
-    @db.execute delete_all_stm
-  end
-
   before :each do
     @inserted_id = mapper.insert(test_entity)
+  end
+
+  after :each do
+    @db.execute delete_all_stm
+    IdentityMap.clean
   end
 
 end
@@ -56,6 +57,11 @@ shared_examples DataMapper do
         end
       end
       @inserted_id.should eq id
+    end
+
+    it 'adds the entity to the identity map' do
+      mapper.map.should_receive(:[]=).with(@inserted_id + 1, test_entity2)
+      mapper.insert(test_entity2)
     end
 
   end
@@ -84,6 +90,11 @@ shared_examples DataMapper do
       entity.should eq entity2
     end
 
+    it 'checks the identity map twice' do
+      mapper.map.should_receive(:[]).twice.with(@inserted_id)
+      mapper.find(@inserted_id)
+    end
+
   end
 
   describe '#update' do
@@ -108,6 +119,10 @@ shared_examples DataMapper do
       row.should eq entity_to_a(updated_entity)
     end
 
+    it 'cleans the identity map', before: true do
+      mapper.map.should be_empty
+    end
+
   end
 
   describe '#delete' do
@@ -123,6 +138,11 @@ shared_examples DataMapper do
       mapper.delete @inserted_id
       rs = @db.execute mapper.find_all_stm
       rs.size.should eq 1
+    end
+
+    it 'cleans the identity map' do
+      mapper.delete @inserted_id
+      mapper.map.should be_empty
     end
 
   end
@@ -142,6 +162,11 @@ shared_examples DataMapper do
     it 'returns an empty array if there are no entities' do
       @db.execute delete_all_stm
       mapper.find_all.should eq []
+    end
+
+    it 'checks the identity map once' do
+      mapper.map.should_receive(:[]).with(@inserted_id)
+      result = mapper.find_all
     end
 
   end

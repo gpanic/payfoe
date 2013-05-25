@@ -2,7 +2,6 @@ class DataMapper
 
   def initialize(db_path = "db/payfoe.db")
     @db_path = db_path
-    @identity_map = {}
   end
 
   def insert(entity)
@@ -14,12 +13,12 @@ class DataMapper
     id = db.last_insert_row_id
     db.close
     entity.id = id
-    @identity_map[id] = entity
+    map[id] = entity
     return id
   end
 
   def find(id)
-    if result = @identity_map[id]
+    if result = map[id]
       return result
     end
     db = SQLite3::Database.open @db_path
@@ -43,6 +42,7 @@ class DataMapper
     stm.execute
     stm.close
     db.close
+    IdentityMap.clean
     return nil
   end
 
@@ -50,16 +50,17 @@ class DataMapper
     db = SQLite3::Database.open @db_path
     db.execute delete_stm, id
     db.close
+    IdentityMap.clean
     return nil
   end
 
   def load(rs)
     id = rs[0]
-    if result = @identity_map[id]
+    if result = map[id]
       return result
     end
     result = do_load id, rs
-    @identity_map[id] = result
+    map[id] = result
     return result
   end
 

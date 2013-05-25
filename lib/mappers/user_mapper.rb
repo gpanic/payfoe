@@ -23,6 +23,10 @@ class UserMapper < DataMapper
     "DELETE FROM users WHERE id = ?"
   end
 
+  def map
+    IdentityMap.user_map
+  end
+
   def do_load(id, rs)
     user = User.new(id, rs[1], rs[2], rs[3])
   end
