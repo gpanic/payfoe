@@ -23,30 +23,10 @@ describe DBHelper do
     File.delete @db_schema_path
   end
 
-  describe 'has a property db_path which' do
-    
-    it 'returns the path to the db' do
-      @dbh.db_path.should eq @db_path
-    end
+  let(:instance_vars) { [:@db_path, :@db_schema_path] }
 
-    it 'sets the path to the db correctly' do
-      @dbh.db_path = "new path"
-      @dbh.db_path.should eq "new path"
-    end
-
-  end
-
-  describe 'has a property db_schema_path which' do
-    
-    it 'returns the path to the db schema' do
-      @dbh.db_schema_path.should eq @db_schema_path
-    end
-
-    it 'sets the path to the db_schema correctly' do
-      @dbh.db_schema_path = "new path"
-      @dbh.db_schema_path.should eq "new path"
-    end
-
+  it 'has instance variables :@db_path, :@db_scheme'  do
+    @dbh.instance_variables.should eq instance_vars
   end
 
   describe '#init_db' do

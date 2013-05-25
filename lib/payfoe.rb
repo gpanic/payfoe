@@ -28,6 +28,7 @@ class PayFoe
   def deposit(user, amount)
     user_validation user
     amount_validation amount
+
     user.balance += amount
     @user_mapper.update user
     transaction = Transaction.new nil, nil, user, "deposit", amount
@@ -37,12 +38,34 @@ class PayFoe
   def withdraw(user, amount)
     user_validation user
     amount_validation amount
+
     user.balance -= amount
-    user.balance = 0 if user.balance < 0
+    if user.balance < 0
+      withdrawn = amount + user.balance
+      user.balance = 0
+    else
+      withdrawn = amount
+    end
     @user_mapper.update user
     transaction = Transaction.new nil, user, nil, "withdrawal", amount
     @transaction_mapper.insert transaction
+    return withdrawn
   end
+
+  def pay(user_from, user_to, amount)
+    user_from.balance -= amount
+    if user_from.balance < 0
+      amount = amount + user_from.balance
+      user_from.balance = 0
+    end
+    user_to.balance += amount
+    @user_mapper.update user_from
+    @user_mapper.update user_to
+    transaction = Transaction.new nil, user_from, user_to, "payment", amount
+    @transaction_mapper.insert transaction
+  end
+
+  private
 
   def user_validation(user)
     if !user.kind_of? User and user != nil
