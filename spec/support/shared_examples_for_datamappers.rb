@@ -4,7 +4,7 @@ shared_context "DataMapperContext" do
     # Prepare test environment
     @db_path = "db/test.db"
     @db_schema_path = "db/test_schema.yaml"
-    @dbh = DBHelper.new(@db_path, @db_schema_path)
+    @dbh = PayFoe::DBHelper.new(@db_path, @db_schema_path)
 
     # Create test db schema
     schema = File.open(@db_schema_path, "w")
@@ -38,13 +38,13 @@ shared_context "DataMapperContext" do
   end
 
   after :each do
-    IdentityMap.clean
+    PayFoe::IdentityMap.clean
     @db.execute delete_all_stm
   end
 
 end
 
-shared_examples DataMapper do
+shared_examples PayFoe::DataMapper do
 
   describe '#insert' do
 
@@ -128,7 +128,7 @@ shared_examples DataMapper do
 
     it 'cleans the identity map' do
       # after calls clean once
-      IdentityMap.should_receive(:clean).twice
+      PayFoe::IdentityMap.should_receive(:clean).twice
       mapper.update updated_entity
     end
 
@@ -151,7 +151,7 @@ shared_examples DataMapper do
 
     it 'cleans the identity map' do
       # after calls clean once
-      IdentityMap.should_receive(:clean).twice
+      PayFoe::IdentityMap.should_receive(:clean).twice
       mapper.delete @inserted_id
     end
 

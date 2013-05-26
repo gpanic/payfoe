@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DBHelper do
+describe PayFoe::DBHelper do
 
   before :all do
     # Prepare test environment
@@ -14,7 +14,7 @@ describe DBHelper do
                  "  - CREATE TABLE test_table2 (id INTEGER PRIMARY KEY, column1 TEXT)"
     schema.close
 
-    @dbh = DBHelper.new(@db_path, @db_schema_path)
+    @dbh = PayFoe::DBHelper.new(@db_path, @db_schema_path)
     @dbh.init_db
   end
 

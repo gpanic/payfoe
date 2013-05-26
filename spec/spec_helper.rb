@@ -1,6 +1,7 @@
 require 'simplecov'
 SimpleCov.start do
   add_filter '/spec/'
+  add_filter '/lib/command_line.rb'
 end
 
 require_relative '../lib/payfoe'

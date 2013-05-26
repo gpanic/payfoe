@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+require_relative '../lib/payfoe'
+require 'optparse'
+require 'terminal-table'
+
+cl = PayFoe::CommandLine.new
+cl.run

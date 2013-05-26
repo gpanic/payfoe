@@ -1,14 +1,14 @@
 require 'spec_helper'
 
-describe PayFoe do
+describe PayFoe::Facade do
 
-  let(:payfoe) { PayFoe.new }
+  let(:payfoe) { PayFoe::Facade.new }
   let(:user_mapper) { double "user_mapper" }
   let(:transaction_mapper) { double "transaction_mapper" }
-  let(:test_user) { User.new(1, "username", "email", "name", 200) }
-  let(:test_user2) { User.new(2, "username2", "email2", "name2", 300) }
-  let(:test_transaction) { Transaction.new(1, nil, nil, "deposit", 200) }
-  let(:test_transaction2) { Transaction.new(2, nil, nil, "deposit", 300) }
+  let(:test_user) { PayFoe::User.new(1, "username", "email", "name", 200) }
+  let(:test_user2) { PayFoe::User.new(2, "username2", "email2", "name2", 300) }
+  let(:test_transaction) { PayFoe::Transaction.new(1, nil, nil, "deposit", 200) }
+  let(:test_transaction2) { PayFoe::Transaction.new(2, nil, nil, "deposit", 300) }
 
   before :each do
     payfoe.instance_variable_set :@user_mapper, user_mapper
@@ -98,7 +98,7 @@ describe PayFoe do
     end
 
     it 'records the transaction' do
-      expected = Transaction.new(nil, nil, test_user, "deposit", 200.0)
+      expected = PayFoe::Transaction.new(nil, nil, test_user, "deposit", 200.0)
       transaction_expectation expected
       payfoe.deposit test_user, 200.0
     end
@@ -125,7 +125,7 @@ describe PayFoe do
     end
 
     it 'records the transaction' do
-      expected = Transaction.new(nil, test_user, nil, "withdrawal", 200.0)
+      expected = PayFoe::Transaction.new(nil, test_user, nil, "withdrawal", 200.0)
       transaction_expectation expected
       payfoe.withdraw test_user, 200.0
     end
@@ -167,8 +167,19 @@ describe PayFoe do
     end
 
     it 'records the transaction' do
-      expected = Transaction.new(nil, test_user, test_user2, "payment", 200.0)
+      expected = PayFoe::Transaction.new(nil, test_user, test_user2, "payment", 200.0)
       transaction_expectation expected
+      payfoe.pay test_user, test_user2, 200.0
+    end
+
+    it 'does not record transactions of 0.0' do
+      transaction_mapper.should_not_receive(:insert)
+      expect { payfoe.pay(test_user, test_user2, 0.0) }.to raise_error ArgumentError
+    end
+
+    it 'does not record transactions from users with 0 balance' do
+      transaction_mapper.should_not_receive(:insert)
+      test_user.balance = 0
       payfoe.pay test_user, test_user2, 200.0
     end
 
@@ -186,15 +197,15 @@ describe PayFoe do
   describe '#transactions_of_user' do
 
     it 'returns all the transactions of a user' do
-      transaction_mapper.should_receive(:find_by_user).and_return([test_transaction])
-      payfoe.transactions_of_user.should eq [test_transaction]
+      transaction_mapper.should_receive(:find_by_user).with(1).and_return([test_transaction])
+      payfoe.transactions_of_user(1).should eq [test_transaction]
     end
 
   end
 
   def transaction_expectation(transaction)
     transaction_mapper.should_receive(:insert) do |arg|
-      arg.should be_an_instance_of Transaction
+      arg.should be_an_instance_of PayFoe::Transaction
       arg.user_from.should eq transaction.user_from
       arg.user_to.should eq transaction.user_to
       arg.type.should eq transaction.type

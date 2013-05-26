@@ -11,4 +11,6 @@ Gem::Specification.new do |s|
   s.files       += Dir['lib/mappers/*.rb']
   s.files       += Dir['db/payfoe_schema.yaml']
   s.add_runtime_dependency 'sqlite3'
+  s.add_runtime_dependency 'terminal-table'
+  s.executables << 'payfoe'
 end

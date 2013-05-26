@@ -1,24 +1,28 @@
 require 'sqlite3'
 require 'yaml'
 
-class DBHelper
+module PayFoe
 
-  attr_accessor :db_path
-  attr_accessor :db_schema_path
+  class DBHelper
 
-  def initialize(db_path = "db/payfoe.db", db_schema_path = "db/payfoe_schema.yaml")
-    @db_path = db_path
-    @db_schema_path = db_schema_path
-  end
+    attr_accessor :db_path
+    attr_accessor :db_schema_path
 
-  def init_db
-    db_schema = YAML::load_file @db_schema_path
-    db = SQLite3::Database.open @db_path
-    db.execute enable_fk
-    db_schema["tables"].each do | create_stm |
-      db.execute create_stm
+    def initialize(db_path = get_db_path, db_schema_path = get_db_schema_path)
+      @db_path = db_path
+      @db_schema_path = db_schema_path
     end
-    db.close if db
+
+    def init_db
+      db_schema = YAML::load_file @db_schema_path
+      db = SQLite3::Database.open @db_path
+      db.execute enable_fk
+      db_schema["tables"].each do | create_stm |
+        db.execute create_stm
+      end
+      db.close if db
+    end
+
   end
 
 end

@@ -1,19 +1,19 @@
 require 'spec_helper'
 
-describe TransactionMapper do
+describe PayFoe::TransactionMapper do
 
-  it_behaves_like DataMapper
+  it_behaves_like PayFoe::DataMapper
   include_context "DataMapperContext"
 
   def delete_all_stm
     "DELETE FROM transactions"
   end
 
-  let(:mapper) { TransactionMapper.new @db_path }
+  let(:mapper) { PayFoe::TransactionMapper.new @db_path }
   let(:identity_map) { double("tansactions_map") }
-  let(:test_entity) { Transaction.new nil, nil, nil, "type", 100 }
-  let(:test_entity2) { Transaction.new nil, nil, nil, "type2", 100 }
-  let(:updated_entity) { Transaction.new @inserted_id, nil, nil, "type3", 200 }
+  let(:test_entity) { PayFoe::Transaction.new nil, nil, nil, "type", 100 }
+  let(:test_entity2) { PayFoe::Transaction.new nil, nil, nil, "type2", 100 }
+  let(:updated_entity) { PayFoe::Transaction.new @inserted_id, nil, nil, "type3", 200 }
 
   def entity_to_a(entity)
     array = []
@@ -32,14 +32,14 @@ describe TransactionMapper do
   end
 
 
-  let(:user_mapper) { UserMapper.new @db_path }
-  let(:test_user) { User.new nil, "u", "e", "n" }
-  let(:test_user2) { User.new nil, "u2", "e2", "n2" }
+  let(:user_mapper) { PayFoe::UserMapper.new @db_path }
+  let(:test_user) { PayFoe::User.new nil, "u", "e", "n" }
+  let(:test_user2) { PayFoe::User.new nil, "u2", "e2", "n2" }
 
   before :each, user: true do
     test_user.id = user_mapper.insert test_user
     test_user2.id = user_mapper.insert test_user2
-    IdentityMap.clean
+    PayFoe::IdentityMap.clean
     test_entity.user_from = test_user
     test_entity.user_to = test_user2
     test_entity.id = mapper.insert test_entity
@@ -53,7 +53,7 @@ describe TransactionMapper do
   after :each, clean: true do
     @db.execute "DELETE FROM transactions"
     @db.execute "DELETE FROM users"
-    IdentityMap.clean
+    PayFoe::IdentityMap.clean
   end
 
   describe '#insert' do
@@ -64,17 +64,17 @@ describe TransactionMapper do
     end
     
     it 'throws an exception when the user doesn\' exist', user: true do
-      test_entity.user_from = User.new 99, nil, nil, nil
-      test_entity.user_to = User.new 99, nil, nil, nil
+      test_entity.user_from = PayFoe::User.new 99, nil, nil, nil
+      test_entity.user_to = PayFoe::User.new 99, nil, nil, nil
       expect { mapper.insert test_entity }.to raise_error SQLite3::ConstraintException
     end
 
     it 'adds the user_from to the identity map', user: true do
-      IdentityMap.users_map[test_entity.user_from.id].should eq test_entity.user_from
+      PayFoe::IdentityMap.users_map[test_entity.user_from.id].should eq test_entity.user_from
     end
 
     it 'adds the user_to to the identity map', user: true do
-      IdentityMap.users_map[test_entity.user_to.id].should eq test_entity.user_to
+      PayFoe::IdentityMap.users_map[test_entity.user_to.id].should eq test_entity.user_to
     end
 
   end
@@ -82,15 +82,15 @@ describe TransactionMapper do
   describe '#find' do
 
     it 'doesn\'t load the user_from', user: true do
-      IdentityMap.clean
+      PayFoe::IdentityMap.clean
       transaction = mapper.find test_entity.id
-      transaction.instance_variable_get(:@user_from).should be_an_instance_of(LazyObject)
+      transaction.instance_variable_get(:@user_from).should be_an_instance_of(PayFoe::LazyObject)
     end
 
     it 'doesn\'t load the user_to', user: true do
-      IdentityMap.clean
+      PayFoe::IdentityMap.clean
       transaction = mapper.find test_entity.id
-      transaction.instance_variable_get(:@user_to).should be_an_instance_of(LazyObject)
+      transaction.instance_variable_get(:@user_to).should be_an_instance_of(PayFoe::LazyObject)
     end
 
     it 'loads users from the identity map', clean: true do
@@ -100,7 +100,7 @@ describe TransactionMapper do
       test_entity.id = mapper.insert test_entity
       transaction = mapper.find(test_entity.id)
       actual = [transaction.user_from, transaction.user_to]
-      expected = [IdentityMap.users_map[test_user.id], IdentityMap.users_map[test_user.id]]
+      expected = [PayFoe::IdentityMap.users_map[test_user.id], PayFoe::IdentityMap.users_map[test_user.id]]
       actual.should eq expected
     end
 
@@ -127,7 +127,7 @@ describe TransactionMapper do
       test_entity2.user_to = test_user
       mapper.insert test_entity
       mapper.insert test_entity2
-      IdentityMap.clean
+      PayFoe::IdentityMap.clean
       actual = mapper.find_by_user(test_user.id)
       actual.map! { |t| entity_to_a t }
       expected = @db.execute "SELECT * FROM transactions WHERE id = ? OR id = ?", test_entity.id, test_entity2.id

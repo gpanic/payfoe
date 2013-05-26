@@ -1,8 +1,12 @@
-class LazyObject
-  attr_accessor :id
+module PayFoe
 
-  def initialize(id)
-    @id = id
+  class LazyObject
+    attr_accessor :id
+
+    def initialize(id)
+      @id = id
+    end
+
   end
 
 end
