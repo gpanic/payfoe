@@ -38,6 +38,7 @@ shared_context "DataMapperContext" do
   end
 
   after :each do
+    IdentityMap.clean
     @db.execute delete_all_stm
   end
 
@@ -101,7 +102,7 @@ shared_examples DataMapper do
       mapper.find(@inserted_id)
     end
 
-    it 'returns the user from the identity map' do
+    it 'returns the entity from the identity map' do
       mapper.map.stub(:[]).and_return(test_entity)
       mapper.find(@inserted_id).should eq mapper.map[@inserted_id]
     end
@@ -126,7 +127,8 @@ shared_examples DataMapper do
     end
 
     it 'cleans the identity map' do
-      IdentityMap.should_receive(:clean)
+      # after calls clean once
+      IdentityMap.should_receive(:clean).twice
       mapper.update updated_entity
     end
 
@@ -148,7 +150,8 @@ shared_examples DataMapper do
     end
 
     it 'cleans the identity map' do
-      IdentityMap.should_receive(:clean)
+      # after calls clean once
+      IdentityMap.should_receive(:clean).twice
       mapper.delete @inserted_id
     end
 
@@ -173,7 +176,13 @@ shared_examples DataMapper do
 
     it 'checks the identity map once' do
       mapper.map.should_receive(:[]).with(@inserted_id)
+      mapper.find_all
+    end
+
+    it 'checks and returns the entities from the identity map' do
+      mapper.map.should_receive(:[]).with(@inserted_id).and_return(test_entity)
       result = mapper.find_all
+      result.should eq [test_entity]
     end
 
   end

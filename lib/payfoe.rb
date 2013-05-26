@@ -25,6 +25,10 @@ class PayFoe
     @user_mapper.find_all
   end
 
+  def user(id)
+    @user_mapper.find id
+  end
+
   def deposit(user, amount)
     user_validation user
     amount_validation amount
@@ -33,6 +37,7 @@ class PayFoe
     @user_mapper.update user
     transaction = Transaction.new nil, nil, user, "deposit", amount
     @transaction_mapper.insert transaction
+    return amount
   end
 
   def withdraw(user, amount)
@@ -53,6 +58,10 @@ class PayFoe
   end
 
   def pay(user_from, user_to, amount)
+    user_validation(user_from)
+    user_validation(user_to)
+    amount_validation(amount)
+
     user_from.balance -= amount
     if user_from.balance < 0
       amount = amount + user_from.balance
@@ -65,10 +74,18 @@ class PayFoe
     @transaction_mapper.insert transaction
   end
 
+  def transactions
+    @transaction_mapper.find_all
+  end
+
+  def transactions_of_user
+    @transaction_mapper.find_by_user
+  end
+
   private
 
   def user_validation(user)
-    if !user.kind_of? User and user != nil
+    if (!user.kind_of? User and !user.kind_of? LazyObject) and user != nil
       raise ArgumentError, 'user is invalid'
     end
   end

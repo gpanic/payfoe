@@ -20,7 +20,13 @@ describe TransactionMapper do
     vars = entity.instance_variables - [:@user_mapper]
     vars.each do |var|
       method = var.to_s[1..-1]
-      array.push(entity.send(method.to_sym))
+      if var == :@user_from or var == :@user_to
+        user = nil
+        user = entity.instance_variable_get(var).id if entity.instance_variable_get(var)
+        array.push user
+      else
+        array.push(entity.send(method.to_sym))
+      end
     end
     return array
   end
@@ -33,6 +39,7 @@ describe TransactionMapper do
   before :each, user: true do
     test_user.id = user_mapper.insert test_user
     test_user2.id = user_mapper.insert test_user2
+    IdentityMap.clean
     test_entity.user_from = test_user
     test_entity.user_to = test_user2
     test_entity.id = mapper.insert test_entity
@@ -41,6 +48,12 @@ describe TransactionMapper do
   after :each, user: true do
     @db.execute "DELETE FROM transactions"
     @db.execute "DELETE FROM users"
+  end
+
+  after :each, clean: true do
+    @db.execute "DELETE FROM transactions"
+    @db.execute "DELETE FROM users"
+    IdentityMap.clean
   end
 
   describe '#insert' do
@@ -54,6 +67,14 @@ describe TransactionMapper do
       test_entity.user_from = User.new 99, nil, nil, nil
       test_entity.user_to = User.new 99, nil, nil, nil
       expect { mapper.insert test_entity }.to raise_error SQLite3::ConstraintException
+    end
+
+    it 'adds the user_from to the identity map', user: true do
+      IdentityMap.users_map[test_entity.user_from.id].should eq test_entity.user_from
+    end
+
+    it 'adds the user_to to the identity map', user: true do
+      IdentityMap.users_map[test_entity.user_to.id].should eq test_entity.user_to
     end
 
   end
@@ -72,6 +93,17 @@ describe TransactionMapper do
       transaction.instance_variable_get(:@user_to).should be_an_instance_of(LazyObject)
     end
 
+    it 'loads users from the identity map', clean: true do
+      test_user.id = user_mapper.insert test_user
+      test_entity.user_from = test_user
+      test_entity.user_to = test_user
+      test_entity.id = mapper.insert test_entity
+      transaction = mapper.find(test_entity.id)
+      actual = [transaction.user_from, transaction.user_to]
+      expected = [IdentityMap.users_map[test_user.id], IdentityMap.users_map[test_user.id]]
+      actual.should eq expected
+    end
+
   end
 
   describe '#update' do
@@ -83,6 +115,23 @@ describe TransactionMapper do
 
       row = @db.get_first_row mapper.find_stm, test_entity.id
       row[1, 2].should eq [test_user2.id, test_user.id]
+    end
+
+  end
+
+  describe '#find_by_user' do
+
+    it 'returns an array of all the users' do
+      user_mapper.insert test_user
+      test_entity.user_from = test_user
+      test_entity2.user_to = test_user
+      mapper.insert test_entity
+      mapper.insert test_entity2
+      IdentityMap.clean
+      actual = mapper.find_by_user(test_user.id)
+      actual.map! { |t| entity_to_a t }
+      expected = @db.execute "SELECT * FROM transactions WHERE id = ? OR id = ?", test_entity.id, test_entity2.id
+      actual.should eq expected
     end
 
   end

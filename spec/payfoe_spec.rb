@@ -7,6 +7,8 @@ describe PayFoe do
   let(:transaction_mapper) { double "transaction_mapper" }
   let(:test_user) { User.new(1, "username", "email", "name", 200) }
   let(:test_user2) { User.new(2, "username2", "email2", "name2", 300) }
+  let(:test_transaction) { Transaction.new(1, nil, nil, "deposit", 200) }
+  let(:test_transaction2) { Transaction.new(2, nil, nil, "deposit", 300) }
 
   before :each do
     payfoe.instance_variable_set :@user_mapper, user_mapper
@@ -68,6 +70,16 @@ describe PayFoe do
     it 'returns an array of all the registered users' do
       user_mapper.should_receive(:find_all).and_return([test_user, test_user])
       payfoe.users.should eq [test_user, test_user]
+    end
+
+  end
+
+  describe '#user' do
+
+    it 'returns the user' do
+      test_user.id = 1
+      user_mapper.should_receive(:find).with(test_user.id).and_return(test_user)
+      payfoe.user(test_user.id).should eq test_user
     end
 
   end
@@ -158,6 +170,24 @@ describe PayFoe do
       expected = Transaction.new(nil, test_user, test_user2, "payment", 200.0)
       transaction_expectation expected
       payfoe.pay test_user, test_user2, 200.0
+    end
+
+  end
+
+  describe '#transactions' do
+
+    it 'returns all the recorded transactions' do
+      transaction_mapper.should_receive(:find_all).and_return([test_transaction, test_transaction2])
+      payfoe.transactions.should eq [test_transaction, test_transaction2]
+    end
+
+  end
+
+  describe '#transactions_of_user' do
+
+    it 'returns all the transactions of a user' do
+      transaction_mapper.should_receive(:find_by_user).and_return([test_transaction])
+      payfoe.transactions_of_user.should eq [test_transaction]
     end
 
   end

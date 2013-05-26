@@ -23,6 +23,10 @@ class TransactionMapper < DataMapper
     "DELETE FROM transactions WHERE id = ?"
   end
 
+  def find_by_user_stm
+    "SELECT #{COLUMNS} FROM transactions WHERE user_from = ? OR user_to = ?"
+  end
+
   def map
     IdentityMap.transactions_map
   end
@@ -31,7 +35,9 @@ class TransactionMapper < DataMapper
     users = []
     rs[1,2].each do |user_id|
       if user_id
-        if not user_from = IdentityMap.users_map[user_id]
+        if user = IdentityMap.users_map[user_id]
+          users.push user
+        else
           users.push LazyObject.new(user_id)
         end
       else
@@ -42,10 +48,15 @@ class TransactionMapper < DataMapper
   end
 
   def do_insert(transaction, stm)
-    user_from = nil
-    user_from = transaction.user_from.id unless transaction.user_from == nil
-    user_to = nil
-    user_to = transaction.user_to.id unless transaction.user_to == nil
+    if user_from = transaction.user_from
+      IdentityMap.users_map[user_from.id] = user_from
+      user_from = user_from.id
+    end
+
+    if user_to = transaction.user_to
+      IdentityMap.users_map[user_to.id] = user_to
+      user_to = user_to.id
+    end
 
     stm.bind_param 1, user_from
     stm.bind_param 2, user_to
@@ -56,6 +67,10 @@ class TransactionMapper < DataMapper
   def do_update(transaction, stm)
     do_insert transaction, stm
     stm.bind_param 5, transaction.id
+  end
+
+  def find_by_user(id)
+    find_many(find_by_user_stm, [id, id])
   end
 
 end
